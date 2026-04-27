@@ -2,6 +2,7 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
+import pandas as pd
 
 # --- SUPER-CLEAN FIREBASE SETUP ---
 if not firebase_admin._apps:
@@ -16,121 +17,75 @@ if not firebase_admin._apps:
             p_key = p_key.replace("\\n", "\n")
             key_dict["private_key"] = p_key
         
+        # Ab yahan koi dusra 'try' nahi hona chahiye
+        key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
         cred = credentials.Certificate(key_dict)
-        firebase_admin.initialize_app(cred)
-    except Exception as e:
+        firebase_admin.initialize_app(cred) # Ye line ab ek hi 'try' ke andar hai
+
+    except Exception as e: # Ye except ab upar wale 'try' (Line 9) se connect ho gaya
         st.error(f"❌ Connection Error: {e}")
         st.stop()
 
 db = firestore.client()
 
-# --- PREMIUM PROFESSIONAL UI (Green & Light Blue) ---
+
+# --- PREMIUM DASHBOARD CSS ---
 st.markdown("""
     <style>
-    /* Background and Global Font */
-    .stApp {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    }
-    
-    /* Header Styling */
-    .main-title {
-        color: #1e40af;
-        font-size: 50px !important;
-        font-weight: 850 !important;
-        text-align: center;
-        margin-bottom: 30px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* Medicine Card Styling */
-    .med-card {
-        background-color: white;
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        border-left: 10px solid #10b981;
-        margin-bottom: 25px;
-        transition: transform 0.3s ease;
-    }
-    .med-card:hover {
-        transform: translateY(-5px);
-    }
-
-    /* Status Badges */
-    .status-pending { color: #f59e0b; font-weight: bold; }
-    .status-taken { color: #10b981; font-weight: bold; }
-    .status-missed { color: #ef4444; font-weight: bold; }
-
-    /* Buttons Styling */
-    .stButton > button {
-        border-radius: 12px !important;
-        font-weight: bold !important;
-        height: 50px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    /* Taken Button (Green) */
-    div[data-testid="column"]:nth-of-type(1) .stButton > button {
-        background-color: #10b981 !important;
-        color: white !important;
-        border: none !important;
-    }
-    
-    /* Not Taken Button (Light Blue/Red Outline) */
-    div[data-testid="column"]:nth-of-type(2) .stButton > button {
-        background-color: #f8fafc !important;
-        color: #ef4444 !important;
-        border: 2px solid #ef4444 !important;
-    }
-    
-    div[data-testid="column"]:nth-of-type(1) .stButton > button:hover {
-        background-color: #059669 !important;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
-    }
-
-    div[data-testid="column"]:nth-of-type(2) .stButton > button:hover {
-        background-color: #fee2e2 !important;
+    .main { background-color: #F8F9FC; }
+    .header-style { font-size: 40px; font-weight: 800; color: #1E3A8A; text-align: center; }
+    [data-testid="stMetricValue"] { color: #1E3A8A; font-weight: bold; }
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px; background-color: #E2E8F0; border-radius: 10px; padding: 10px 20px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">💊 Meri Dawai</h1>', unsafe_allow_html=True)
+st.markdown('<p class="header-style">👨‍⚕️ Caregiver Command Center</p>', unsafe_allow_html=True)
 
-# Data Fetching
+# Data Processing
 docs = db.collection("medications").stream()
-meds_found = False
+meds_list = [{"id": doc.id, **doc.to_dict()} for doc in docs]
 
-for doc in docs:
-    meds_found = True
-    med = doc.to_dict()
-    
-    # Custom Container for Card Look
-    with st.container():
-        st.markdown(f"""
-            <div class="med-card">
-                <h2 style="margin:0; color:#1e3a8a;">💊 {med['name']}</h2>
-                <p style="font-size:18px; margin:5px 0;">⏰ Samay: <b>{med['time']}</b></p>
-                <p style="font-size:18px;">Status: <span class="status-{med['status'].split()[0].lower()}">{med['status']}</span></p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Action Buttons
-        if med['status'] == "Pending":
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                if st.button("Dawai Le Li ✅", key=f"yes_{doc.id}"):
-                    db.collection("medications").document(doc.id).update({"status": "Taken ✅"})
-                    st.toast(f"Shabaash! {med['name']} le li.")
-                    st.rerun()
-            
-            with col2:
-                if st.button("Nahi Li ❌", key=f"no_{doc.id}"):
-                    db.collection("medications").document(doc.id).update({"status": "Missed ❌"})
-                    st.toast(f"Dhyan rakhein! {med['name']} chhoot gayi.")
-                    st.rerun()
-        st.write("") # Padding between cards
+# AI Score Calculation
+if meds_list:
+    total = len(meds_list)
+    taken = len([m for m in meds_list if "Taken" in m['status']])
+    score = (taken / total) * 100
+else:
+    score = 0
 
-if not meds_found:
-    st.info("Abhi koi dawai schedule nahi hai. Relax karein!")
-            
+# Metrics Section
+c1, c2, c3 = st.columns(3)
+c1.metric("Active Meds", len(meds_list))
+c2.metric("Adherence Score", f"{score:.1f}%")
+c3.metric("Patient Health", "Stable" if score > 75 else "Needs Check")
+
+st.divider()
+
+tab1, tab2 = st.tabs(["📊 Live Monitor", "➕ Set New Schedule"])
+
+with tab1:
+    if not meds_list:
+        st.info("No medications added.")
+    else:
+        for med in meds_list:
+            with st.container():
+                col_a, col_b, col_c = st.columns([3,2,1])
+                col_a.write(f"**{med['name']}**")
+                col_b.write(f"🕒 {med['time']} | {med['status']}")
+                if col_c.button("Del", key=f"del_{med['id']}"):
+                    db.collection("medications").document(med['id']).delete()
+                    st.rerun()
+                st.markdown("---")
+
+with tab2:
+    with st.form("new_med"):
+        m_name = st.text_input("Dawai ka Naam")
+        m_time = st.text_input("Samay (e.g., 08:00 AM)")
+        if st.form_submit_button("Add to Patient App"):
+            if m_name and m_time:
+                db.collection("medications").add({"name": m_name, "time": m_time, "status": "Pending"})
+                st.success("Nayi dawai add kar di gayi hai!")
+                st.rerun()
