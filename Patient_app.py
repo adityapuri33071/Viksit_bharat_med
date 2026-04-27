@@ -5,29 +5,27 @@ import json
 
 # --- SUPER-CLEAN FIREBASE SETUP ---
 if not firebase_admin._apps:
-    try:
+        try:
         raw_json = st.secrets["textkey"]
         key_dict = json.loads(raw_json)
         if "private_key" in key_dict:
             p_key = key_dict["private_key"]
-            # Dot aur kachra saaf karna
             start_marker = "-----BEGIN PRIVATE KEY-----"
             if start_marker in p_key:
                 p_key = p_key[p_key.find(start_marker):]
             p_key = p_key.replace("\\n", "\n")
             key_dict["private_key"] = p_key
-        #cred = credentials.Certificate(key_dict)
-        # Purane code ki jagah ye replace karo
-try:
-    # Key dict se private key ke newlines (\n) ko sahi karne ke liye
-    key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
-    cred = credentials.Certificate(key_dict)
-except Exception as e:
-    st.error(f"Credential Error: {e}")
-           firebase_admin.initialize_app(cred)
+        
+        # --- AB YAHAN SE CLEAN HAI ---
+        cred = credentials.Certificate(key_dict)
+        firebase_admin.initialize_app(cred)
+
 except Exception as e:
         st.error(f"❌ Connection Error: {e}")
         st.stop()
+
+db = firestore.client()
+
 
 db = firestore.client()
 
