@@ -24,9 +24,8 @@ try:
     cred = credentials.Certificate(key_dict)
 except Exception as e:
     st.error(f"Credential Error: {e}")
-    
-        firebase_admin.initialize_app(cred)
-    except Exception as e:
+           firebase_admin.initialize_app(cred)
+except Exception as e:
         st.error(f"❌ Connection Error: {e}")
         st.stop()
 
