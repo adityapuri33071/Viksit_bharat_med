@@ -7,7 +7,15 @@ import pandas as pd
 # --- FIREBASE SETUP ---
 if not firebase_admin._apps:
     key_dict = json.loads(st.secrets["textkey"])
+    #cred = credentials.Certificate(key_dict)
+    # Purane code ki jagah ye replace karo
+try:
+    # Key dict se private key ke newlines (\n) ko sahi karne ke liye
+    key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
     cred = credentials.Certificate(key_dict)
+except Exception as e:
+    st.error(f"Credential Error: {e}")
+    
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
