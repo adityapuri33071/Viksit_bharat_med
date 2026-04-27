@@ -16,19 +16,18 @@ if not firebase_admin._apps:
                 p_key = p_key[p_key.find(start_marker):]
             p_key = p_key.replace("\\n", "\n")
             key_dict["private_key"] = p_key
-        #cred = credentials.Certificate(key_dict)
-        # Purane code ki jagah ye replace karo
-try:
-    # Key dict se private key ke newlines (\n) ko sahi karne ke liye
-    key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
-    cred = credentials.Certificate(key_dict)
-except Exception as e:
-    st.error(f"Credential Error: {e}")
-    
-        firebase_admin.initialize_app(cred)
-    except Exception as e:
+        
+        # Ab yahan koi dusra 'try' nahi hona chahiye
+        key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
+        cred = credentials.Certificate(key_dict)
+        firebase_admin.initialize_app(cred) # Ye line ab ek hi 'try' ke andar hai
+
+    except Exception as e: # Ye except ab upar wale 'try' (Line 9) se connect ho gaya
         st.error(f"❌ Connection Error: {e}")
         st.stop()
+
+db = firestore.client()
+
 
 db = firestore.client()
 
