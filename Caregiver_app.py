@@ -4,19 +4,33 @@ from firebase_admin import credentials, firestore
 import json
 import pandas as pd
 
-# --- FIREBASE SETUP ---
+# --- FIREBASE SETUP (Bulletproof Version) ---
 if not firebase_admin._apps:
-    key_dict = json.loads(st.secrets["textkey"])
-    #cred = credentials.Certificate(key_dict)
-    # Purane code ki jagah ye replace karo
-try:
-    # Key dict se private key ke newlines (\n) ko sahi karne ke liye
-    key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
-    cred = credentials.Certificate(key_dict)
-except Exception as e:
-    st.error(f"Credential Error: {e}")
-    
-    firebase_admin.initialize_app(cred)
+    try:
+        # 1. Secret fetch karna
+        raw_json = st.secrets["textkey"]
+        key_dict = json.loads(raw_json)
+        
+        # 2. PRIVATE KEY CLEANING (Sabse Zaroori Step)
+        if "private_key" in key_dict:
+            p_key = key_dict["private_key"]
+            # Aage-piche ke faltu spaces ya dots hatana
+            p_key = p_key.strip() 
+            # Double backslashes ko asli newline mein badalna
+            p_key = p_key.replace("\\n", "\n")
+            key_dict["private_key"] = p_key
+            
+        # 3. Initialize
+        cred = credentials.Certificate(key_dict)
+        firebase_admin.initialize_app(cred)
+        
+    except Exception as e:
+        st.error(f"❌ Firebase Setup Fail: {e}")
+        st.info("Check karo: Kya Secrets mein 'private_key' ke shuruat mein koi dot (.) ya space toh nahi reh gaya?")
+        st.stop() # Error aane par app ko yahin rok do
+
+db = firestore.client()
+        
 
 db = firestore.client()
 
