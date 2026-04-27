@@ -16,35 +16,85 @@ if not firebase_admin._apps:
             p_key = p_key.replace("\\n", "\n")
             key_dict["private_key"] = p_key
         
-        # --- AB YAHAN SE CLEAN HAI ---
         cred = credentials.Certificate(key_dict)
         firebase_admin.initialize_app(cred)
-
     except Exception as e:
         st.error(f"❌ Connection Error: {e}")
         st.stop()
 
 db = firestore.client()
-# --- PREMIUM ELDERLY CSS ---
+
+# --- PREMIUM PROFESSIONAL UI (Green & Light Blue) ---
 st.markdown("""
     <style>
-    html, body, [class*="st-"] { font-size: 24px !important; font-weight: 600; }
-    h1 { color: #1E3A8A !important; font-size: 55px !important; text-align: center; font-weight: 800; }
-    h3 { font-size: 35px !important; color: #111827 !important; }
-    .stButton > button {
-        width: 100%; height: 80px !important;
-        background-color: #059669 !important; color: white !important;
-        font-size: 28px !important; border-radius: 20px !important;
-        font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    /* Background and Global Font */
+    .stApp {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
     }
-    [data-testid="stVerticalBlock"] > div > div > div[data-testid="element-container"] {
-        background-color: white; border-radius: 25px; padding: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
+    
+    /* Header Styling */
+    .main-title {
+        color: #1e40af;
+        font-size: 50px !important;
+        font-weight: 850 !important;
+        text-align: center;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Medicine Card Styling */
+    .med-card {
+        background-color: white;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border-left: 10px solid #10b981;
+        margin-bottom: 25px;
+        transition: transform 0.3s ease;
+    }
+    .med-card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Status Badges */
+    .status-pending { color: #f59e0b; font-weight: bold; }
+    .status-taken { color: #10b981; font-weight: bold; }
+    .status-missed { color: #ef4444; font-weight: bold; }
+
+    /* Buttons Styling */
+    .stButton > button {
+        border-radius: 12px !important;
+        font-weight: bold !important;
+        height: 50px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    /* Taken Button (Green) */
+    div[data-testid="column"]:nth-of-type(1) .stButton > button {
+        background-color: #10b981 !important;
+        color: white !important;
+        border: none !important;
+    }
+    
+    /* Not Taken Button (Light Blue/Red Outline) */
+    div[data-testid="column"]:nth-of-type(2) .stButton > button {
+        background-color: #f8fafc !important;
+        color: #ef4444 !important;
+        border: 2px solid #ef4444 !important;
+    }
+    
+    div[data-testid="column"]:nth-of-type(1) .stButton > button:hover {
+        background-color: #059669 !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+    }
+
+    div[data-testid="column"]:nth-of-type(2) .stButton > button:hover {
+        background-color: #fee2e2 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📱 Meri Dawai")
+st.markdown('<h1 class="main-title">💊 Meri Dawai</h1>', unsafe_allow_html=True)
 
 # Data Fetching
 docs = db.collection("medications").stream()
@@ -53,17 +103,34 @@ meds_found = False
 for doc in docs:
     meds_found = True
     med = doc.to_dict()
-    with st.container(border=True):
-        st.subheader(f"💊 {med['name']}")
-        st.write(f"⏰ Time: **{med['time']}**")
-        st.write(f"Status: **{med['status']}**")
+    
+    # Custom Container for Card Look
+    with st.container():
+        st.markdown(f"""
+            <div class="med-card">
+                <h2 style="margin:0; color:#1e3a8a;">💊 {med['name']}</h2>
+                <p style="font-size:18px; margin:5px 0;">⏰ Samay: <b>{med['time']}</b></p>
+                <p style="font-size:18px;">Status: <span class="status-{med['status'].split()[0].lower()}">{med['status']}</span></p>
+            </div>
+        """, unsafe_allow_html=True)
         
+        # Action Buttons
         if med['status'] == "Pending":
-            if st.button("Dawai Le Li ✅", key=doc.id):
-                db.collection("medications").document(doc.id).update({"status": "Taken ✅"})
-                st.toast("Shabaash! Dawai le li gayi hai.")
-                st.rerun()
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("Dawai Le Li ✅", key=f"yes_{doc.id}"):
+                    db.collection("medications").document(doc.id).update({"status": "Taken ✅"})
+                    st.toast(f"Shabaash! {med['name']} le li.")
+                    st.rerun()
+            
+            with col2:
+                if st.button("Nahi Li ❌", key=f"no_{doc.id}"):
+                    db.collection("medications").document(doc.id).update({"status": "Missed ❌"})
+                    st.toast(f"Dhyan rakhein! {med['name']} chhoot gayi.")
+                    st.rerun()
+        st.write("") # Padding between cards
 
 if not meds_found:
-    st.info("Abhi koi dawai set nahi hai. Caregiver se check karein.")
-    
+    st.info("Abhi koi dawai schedule nahi hai. Relax karein!")
+                    
