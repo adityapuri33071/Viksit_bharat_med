@@ -22,7 +22,7 @@ if not firebase_admin._apps:
         cred = credentials.Certificate(key_dict)
         firebase_admin.initialize_app(cred) # Ye line ab ek hi 'try' ke andar hai
 
-    except Exception as e: # Ye except ab upar wale 'try' (Line 9) se connect ho gaya
+except Exception as e: # Ye except ab upar wale 'try' (Line 9) se connect ho gaya
         st.error(f"❌ Connection Error: {e}")
         st.stop()
 
