@@ -29,15 +29,123 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 
-# --- PREMIUM DASHBOARD CSS ---
+# --- PREMIUM MEDICAL DASHBOARD CSS ---
 st.markdown("""
     <style>
-    .main { background-color: #F8F9FC; }
-    .header-style { font-size: 40px; font-weight: 800; color: #1E3A8A; text-align: center; }
-    [data-testid="stMetricValue"] { color: #1E3A8A; font-weight: bold; }
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+    /* Main Background & Fonts */
+    [data-testid="stAppViewContainer"] { 
+        background-color: #F2F7F9; /* Soft Medical Light Blue */
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    [data-testid="stHeader"] { background-color: transparent; }
+    
+    /* Premium Header Gradient */
+    .header-style { 
+        font-size: 42px; 
+        font-weight: 900; 
+        background: -webkit-linear-gradient(135deg, #004D7A, #008793, #00BF72);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center; 
+        padding: 10px 0 20px 0;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+    }
+
+    /* Floating Metric Cards */
+    [data-testid="stMetric"] {
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        padding: 15px 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        border: 1px solid #E8F0F2;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-3px);
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 14px;
+        color: #5C7285;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    [data-testid="stMetricValue"] { 
+        color: #008793; 
+        font-weight: 800; 
+        font-size: 34px;
+    }
+
+    /* Stylish Tabs */
+    .stTabs [data-baseweb="tab-list"] { 
+        gap: 12px; 
+        background-color: transparent;
+    }
     .stTabs [data-baseweb="tab"] {
-        height: 50px; background-color: #E2E8F0; border-radius: 10px; padding: 10px 20px;
+        height: 48px; 
+        background-color: #FFFFFF; 
+        border-radius: 8px; 
+        padding: 10px 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        border: 1px solid #E8F0F2;
+        color: #5C7285;
+        font-weight: 600;
+        transition: all 0.3s ease-in-out;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #008793;
+        border-color: #008793;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #008793 !important;
+        color: #FFFFFF !important;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 135, 147, 0.3);
+    }
+
+    /* Modern Buttons (Del & Add) */
+    .stButton > button {
+        border-radius: 8px;
+        border: 1px solid #008793;
+        color: #008793;
+        font-weight: 600;
+        background-color: #FFFFFF;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+    .stButton > button:hover {
+        background-color: #008793;
+        color: #FFFFFF;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 135, 147, 0.2);
+    }
+    
+    /* Clean Form Layout */
+    [data-testid="stForm"] {
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        padding: 25px;
+        border: 1px solid #E8F0F2;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    }
+    
+    /* Inputs */
+    .stTextInput > div > div > input {
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        padding: 10px 15px;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #008793;
+        box-shadow: 0 0 0 1px #008793;
+    }
+    
+    /* Elegant Dividers */
+    hr {
+        border-color: #E8F0F2;
+        margin: 1.5em 0;
     }
     </style>
     """, unsafe_allow_html=True)
